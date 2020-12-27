@@ -274,8 +274,8 @@ class Scanner2(Scanner):
 
         extended_arg = 0
         for offset in self.op_range(0, codelen):
+            jump_idx = 0
             if offset in jump_targets:
-                jump_idx = 0
                 # We want to process COME_FROMs to the same offset to be in *descending*
                 # offset order so we have the larger range or biggest instruction interval
                 # last. (I think they are sorted in increasing order, but for safety
@@ -307,6 +307,16 @@ class Scanner2(Scanner):
 
             op = self.code[offset]
             op_name = self.op_name(op)
+
+            if op == self.opc.LOAD_FAST_ZERO_LOAD_CONST:
+                linestart = self.linestarts.get(offset, None)
+                tokens.append(
+                    Token(
+                        'LOAD_FAST', 0, varnames[0], "%s_%d" % (offset, jump_idx), linestart, self.opc.LOAD_FAST, True, self.opc
+                    )
+                )
+                op = self.opc.LOAD_CONST
+                op_name = self.op_name(op)
 
             oparg = None
             pattr = None
