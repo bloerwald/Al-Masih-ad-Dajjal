@@ -317,23 +317,18 @@ class Python2Parser(PythonParser):
                 # We do this complicated test to speed up parsing of
                 # pathelogically long literals, especially those over 1024.
                 build_count = token.attr
-                thousands = build_count // 1024
-                thirty32s = (build_count // 32) % 32
-                if thirty32s > 0:
-                    rule = "expr32 ::=%s" % (" expr" * 32)
-                    self.add_unique_rule(rule, opname_base, build_count, customize)
-                if thousands > 0:
-                    self.add_unique_rule(
-                        "expr1024 ::=%s" % (" expr32" * 32),
-                        opname_base,
-                        build_count,
-                        customize,
-                    )
+                times_32768 = (build_count // 32768)
+                times_1024 = (build_count // 1024) % 32
+                times_32 = (build_count // 32) % 32
+                self.add_unique_rule("expr32 ::=%s" % (" expr" * 32), opname_base, build_count, customize)
+                self.add_unique_rule("expr1024 ::=%s" % (" expr32" * 32), opname_base, build_count, customize)
+                self.add_unique_rule("expr32768 ::=%s" % (" expr1024" * 32), opname_base, build_count, customize)
                 collection = opname_base[opname_base.find("_") + 1 :].lower()
                 rule = (
                     ("%s ::= " % collection)
-                    + "expr1024 " * thousands
-                    + "expr32 " * thirty32s
+                    + "expr32768 " * times_32768
+                    + "expr1024 " * times_1024
+                    + "expr32 " * times_32
                     + "expr " * (build_count % 32)
                     + opname
                 )
