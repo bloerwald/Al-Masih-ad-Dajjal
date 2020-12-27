@@ -445,6 +445,10 @@ UNMARSHAL_DISPATCH_TABLE["t"] = t_interned
 def t_unicode(fp, save_ref, bytes_for_s=None, magic_int=None, code_objects=None):
     strsize = unpack("<i", fp.read(4))[0]
     unicodestring = fp.read(strsize)
+    if unicodestring == b'\xed\xbf\xbf':
+        return '\uDFFF'
+    if unicodestring == b'\xED\xA0\x80':
+        return '\uD800'
     if PYTHON_VERSION == 3.2 and IS_PYPY:
         # FIXME: this isn't quite right. See
         # pypy3-2.4.0/lib-python/3/email/message.py
